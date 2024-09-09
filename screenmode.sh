@@ -39,18 +39,23 @@ if [[ ( -z "$mode" && -z "$x" && -z "$y" && -z "$r" && -z "$H" && -z "$s" ) || -
 then
     echo '
 usage: screenmode.sh [options] [mode]
-        options:
+    options:
+        General
             -h          Print this help text
+        Screen mode
+        The screen mode will be set to the first
+        one that matches all provided criteria
             -x 1920     Horizontal Resolution
             -y 1080     Vertical Resolution
             -r 60       Refresh Rate
+        Screen settings
             -H 1        HDR Enabled
             -s 1.75     Fractional Scaling
-        mode:
-            The name of a kscreen-doctor screen mode
-            to search for (such as 1920x1080@60) or
-            a preset (4k or fhd).
-            Options take precedent over mode.
+    mode:
+        The name of a kscreen-doctor screen mode
+        to search for (such as 1920x1080@60) or
+        a preset (4k or fhd).
+        Options take precedent over mode.
 '
     exit 0;
 fi
