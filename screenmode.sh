@@ -6,7 +6,7 @@
 
 
 # Parse Options
-while getopts 'x:y:r:h:s:' OPTION
+while getopts ':x:y:r:H:s:h' OPTION
 do
     case "$OPTION" in
         x)
@@ -18,84 +18,105 @@ do
         r)
             r="$OPTARG"
             ;;
-        h)
-            h="$OPTARG"
+        H)
+            H="$OPTARG"
             ;;
         s)
             s="$OPTARG"
             ;;
+        h)
+            h=true
+            ;;
+        ?)
+            h=true
+            ;;
     esac
 done
+mode=${@:$OPTIND:1}
 
 # Return help if no arguments
-if [[ -z $1 && -z x && -z y && -z r && -z h && -z s ]]
+if [[ ( -z "$mode" && -z "$x" && -z "$y" && -z "$r" && -z "$H" && -z "$s" ) || -v h ]]
 then
-    echo 'Usage:   screenmode -xyrhs [MODE/PRESET]
-            -x 1920 -- Horizontal Resolution
-            -y 1080 -- Vertical Resolution
-            -r 60   -- Refresh Rate
-            -h 1    -- HDR Enabled
-            -s 1.75 -- Fractional Scaling
+    echo '
+usage: screenmode.sh [options] [mode]
+        options:
+            -h          Print this help text
+            -x 1920     Horizontal Resolution
+            -y 1080     Vertical Resolution
+            -r 60       Refresh Rate
+            -H 1        HDR Enabled
+            -s 1.75     Fractional Scaling
+        mode:
+            The name of a kscreen-doctor screen mode
+            to search for (such as 1920x1080@60) or
+            a preset (4k or fhd).
+            Options take precedent over mode.
+'
+    exit 0;
 fi
 
-# Get screen mode json
-kscreen_modes=$(kscreen-doctor -j)
+# Check if mode switch desired
+if [[  ! -z "$mode" || -v x || -v y || -v r ]]
+then
+    # Get screen mode json
+    kscreen_modes=$(kscreen-doctor -j)
 
-# Find mode id based on preset
-if [ "$1" = "4k" ]
-then
-    kscreen_mode_id=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name == "3840x2160@120")) | first | .id')
-elif [ "$1" = "fhd" ]
-then
-    kscreen_mode_id=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name == "1920x1080@60")) | first | .id')
-elif [ ! -z "$1" ]
-then
-    echo "Looking for screen mode containing ${1}"
-    kscreen_mode=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name | contains("'$1'"))) | first ')
-    kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
-    echo "Found screen mode $kscreen_mode_name"
-    kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
-fi
+    # Find mode id based on preset
+    if [ "$mode" = "4k" ]
+    then
+        kscreen_mode_id=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name == "3840x2160@120")) | first | .id')
+    elif [ "$mode" = "fhd" ]
+    then
+        kscreen_mode_id=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name == "1920x1080@60")) | first | .id')
+    elif [ ! -z "$mode" ]
+    then
+        echo "Looking for screen mode containing $mode"
+        kscreen_mode=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name | contains("'$mode'"))) | first ')
+        kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
+        kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
+        echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+    fi
 
-# Find mode id based on arguments
-if [[ -v x || -v y || -v r ]]
-then
-    echo "Looking for screen mode containing ${x}x${y}@${r}"
-    kscreen_mode=$(echo $kscreen_modes | jq -r '.outputs[0].modes
-    |
-    map(
-        select(
-            (.name | contains("'"${x}x"'"))
-            and
-            (.name | contains("'"${y}@"'"))
-            and
-            (.name | contains("'"@${r}"'"))
+    # Find mode id based on arguments
+    if [[ -v x || -v y || -v r ]]
+    then
+        echo "Looking for screen mode containing ${x}x${y}@${r}"
+        kscreen_mode=$(echo $kscreen_modes | jq -r '.outputs[0].modes
+        |
+        map(
+            select(
+                (.name | contains("'"${x}x"'"))
+                and
+                (.name | contains("'"${y}@"'"))
+                and
+                (.name | contains("'"@${r}"'"))
+            )
         )
-    )
-    |
-    first')
-    kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
-    echo "Found screen mode $kscreen_mode_name"
-    kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
-fi
+        |
+        first')
+        kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
+        kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
+        echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+    fi
 
-# Set to found screen mode
-if [[ -v kscreen_mode_id && "$kscreen_mode_id" != "null" ]]
-then
-    echo "Setting screen to mode $kscreen_mode_id"
-    kscreen-doctor output.1.mode.$kscreen_mode_id
-else
-    echo "Screen mode not found :("
+    # Set to found screen mode
+    if [[ -v kscreen_mode_id && "$kscreen_mode_id" != "null" ]]
+    then
+        echo "Setting screen to mode $kscreen_mode_id"
+        kscreen-doctor output.1.mode.$kscreen_mode_id
+    else
+        echo "Screen mode not found :("
+    fi
 fi
 
 
 # Set HDR
-if [ "$h" = "1" ]
+if [ "$H" = "1" ]
 then
     echo "Enabling HDR"
     kscreen-doctor output.1.hdr.enable
     kscreen-doctor output.1.wcg.enable
-elif [ "$h" = "0" ]
+elif [ "$H" = "0" ]
 then
     echo "Disabling HDR"
     kscreen-doctor output.1.hdr.disable
