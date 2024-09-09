@@ -21,10 +21,27 @@ usage: screenmode.sh [options] [mode]
             -r 60       Refresh Rate
         Screen settings
             -H 1        HDR Enabled
-            -s 1.75     Fractional Scaling
+            -s 1.75     Fractional scaling factor
+                        or "auto" to find 1080p
+                        equivalent (i.e. 2.0 at
+                        2160p)
     mode:
         The name of a kscreen-doctor screen mode
         to search for (such as 1920x1080@60) or
         a preset (4k or fhd).
         Options take precedent over mode.
+```
+
+## Examples
+### Use for resolution automation in Sunshine game streaming
+> **Note:** Due to the exit code, the connection will fail if the client requests a resolution not available on the host
+
+- Do
+```
+/path/to/screenmode.sh -x "$SUNSHINE_CLIENT_WIDTH" -y "$SUNSHINE_CLIENT_HEIGHT" -r "$SUNSHINE_CLIENT_FPS" -H 0
+```
+
+- Undo
+```
+/path/to/screenmode.sh -x 3840 -y 2160 -r 120 -H 1
 ```

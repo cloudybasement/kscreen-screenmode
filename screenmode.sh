@@ -50,7 +50,10 @@ usage: screenmode.sh [options] [mode]
             -r 60       Refresh Rate
         Screen settings
             -H 1        HDR Enabled
-            -s 1.75     Fractional Scaling
+            -s 1.75     Fractional scaling factor
+                        or "auto" to find 1080p
+                        equivalent (i.e. 2.0 at
+                        2160p)
     mode:
         The name of a kscreen-doctor screen mode
         to search for (such as 1920x1080@60) or
@@ -138,6 +141,15 @@ fi
 # Set scale
 if [[ -v s ]]
 then
+    if [ "$s" = "auto" ]
+    then
+        current_mode_id=$(kscreen-doctor -j | jq -r '.outputs[0].currentModeId')
+        current_mode_height=$(kscreen-doctor -j | jq -r '.outputs[0].modes | map(select(.id == "'$current_mode_id'")) | first | .size.height')
+        s=$(bc <<< "scale=2; ${current_mode_height}/1080")
+        echo "Automatic scale is $s"
+    fi
     echo "Setting scale to $s"
     kscreen-doctor output.1.scale.$s
 fi
+
+exit 0;
