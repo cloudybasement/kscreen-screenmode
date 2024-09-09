@@ -1,6 +1,11 @@
 # Screenmode setting utility for kscreen-doctor (KDE Plasma 6)
 
-This script uses kscreen-doctor to find and set the resolution, refresh rate, HDR state and scaling matching criteria provided by the user.
+This script uses kscreen-doctor on KDE Plasma 6 desktops to find and set the screen mode for the desired resolution and refresh rate, as well as set the HDR state and scaling.
+
+## Dependencies
+- bash
+- kscreen-doctor
+- jq
 
 ## Usage
 ```
