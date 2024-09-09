@@ -79,7 +79,10 @@ then
         kscreen_mode=$(echo $kscreen_modes | jq -r '.outputs[0].modes | map(select(.name | contains("'$mode'"))) | first ')
         kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
         kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
-        echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+        if [ "$kscreen_mode_id" != "null" ]
+        then
+            echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+        fi
     fi
 
     # Find mode id based on arguments
@@ -101,7 +104,10 @@ then
         first')
         kscreen_mode_name=$(echo $kscreen_mode | jq -r '.name')
         kscreen_mode_id=$(echo $kscreen_mode | jq -r '.id')
-        echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+        if [ "$kscreen_mode_id" != "null" ]
+        then
+            echo "Found screen mode $kscreen_mode_name with ID $kscreen_mode_id"
+        fi
     fi
 
     # Set to found screen mode
@@ -111,6 +117,7 @@ then
         kscreen-doctor output.1.mode.$kscreen_mode_id
     else
         echo "Screen mode not found :("
+        exit 1;
     fi
 fi
 
